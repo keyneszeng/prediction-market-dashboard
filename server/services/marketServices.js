@@ -50,7 +50,8 @@ async function fetchPolymarketData(searchTerm = '') {
       title: market.question,
       volume: parseFloat(market.volume || 0),
       yesPrice: parseFloat(market.outcomes?.[0]?.price || 0),
-      noPrice: parseFloat(market.outcomes?.[1]?.price || 0)
+      noPrice: parseFloat(market.outcomes?.[1]?.price || 0),
+      tags: market.event?.tags || []
     }));
     
     // 过滤搜索词

@@ -96,6 +96,15 @@ function MarketCard({ platform, data }) {
               <h3 className="text-white text-sm font-semibold mb-2 truncate">
                 {event.title}
               </h3>
+              {platform === 'polymarket' && event.tags && event.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {event.tags.slice(0, 3).map((tag, index) => (
+                    <span key={index} className="text-xs bg-purple-600/20 text-purple-300 px-2 py-1 rounded">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
               {platform === 'kalshi' && event.seriesTicker && (
                 <div className="mb-2">
                   <PriceChart seriesTicker={event.seriesTicker} eventTicker={event.id} />
