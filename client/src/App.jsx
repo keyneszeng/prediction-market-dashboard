@@ -13,7 +13,7 @@ function App() {
   const fetchMarketData = useCallback(async (query = '') => {
     setLoading(true)
     try {
-      const response = await axios.get('http://localhost:3001/api/markets', {
+      const response = await axios.get('/api/markets', {
         params: { query }
       })
       setMarkets(response.data)
