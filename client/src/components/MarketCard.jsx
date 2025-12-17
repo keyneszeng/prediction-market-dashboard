@@ -12,11 +12,10 @@ function PriceChart({ seriesTicker, eventTicker }) {
         const response = await axios.get('/api/candlesticks', {
           params: { seriesTicker, eventTicker }
         })
-        // 假设 candlesticks 有 end_ts, yes_price, no_price
-        const chartData = response.data.map(candle => ({
-          time: new Date(candle.end_ts * 1000).toLocaleDateString(),
-          yes: parseFloat(candle.yes_price),
-          no: parseFloat(candle.no_price)
+        const chartData = response.data.market_candlesticks[0].map(candle => ({
+          time: new Date(candle.end_period_ts * 1000).toLocaleDateString(),
+          yes: parseFloat(candle.yes_ask.close_dollars),
+          no: 1 - parseFloat(candle.yes_ask.close_dollars)
         }))
         setData(chartData)
       } catch (error) {
