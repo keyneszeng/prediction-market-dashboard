@@ -1,0 +1,22 @@
+{
+  "name": "prediction-market-dashboard",
+  "version": "1.0.0",
+  "description": "预测市场仪表盘 - 聚合多个预测平台数据",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "test-setup": "node test-setup.js"
+  },
+  "keywords": ["prediction-market", "dashboard", "polymarket", "kalshi"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
