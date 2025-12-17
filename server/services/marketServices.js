@@ -75,21 +75,37 @@ async function fetchPolymarketData(searchTerm = '') {
 // Kalshi数据获取
 async function fetchKalshiData(searchTerm = '') {
   try {
-    const response = await axios.get('https://trading-api.kalshi.com/trade-api/v2/markets');
-    const markets = response.data.markets || [];
-    const events = markets.map(market => ({
-      id: market.id,
-      title: market.title,
-      volume: parseFloat(market.volume),
-      yesPrice: parseFloat(market.yes_price),
-      noPrice: parseFloat(market.no_price)
-    }));
+    // 使用官方 Trade API v2 (REST API)
+    const response = await axios.get('https://api.elections.kalshi.com/trade-api/v2/events?status=open&with_nested_markets=true&limit=100');
+    const eventsData = response.data.events || [];
+    
+    // 将事件下的市场扁平化为事件列表
+    const allMarkets = [];
+    eventsData.forEach(event => {
+      if (event.markets && Array.isArray(event.markets)) {
+        event.markets.forEach(market => {
+          allMarkets.push({
+            id: market.ticker,
+            title: market.title,
+            volume: parseFloat(market.volume || 0),
+            yesPrice: parseFloat(market.yes_ask || 0),
+            noPrice: parseFloat(market.no_ask || 0)
+          });
+        });
+      }
+    });
+    
+    // 过滤搜索词
+    const filteredMarkets = searchTerm ? 
+      allMarkets.filter(market => market.title.toLowerCase().includes(searchTerm.toLowerCase())) : 
+      allMarkets;
+    
     return {
       platform: 'kalshi',
       url: PLATFORM_URLS.kalshi,
-      events: events.filter(event => !searchTerm || event.title.toLowerCase().includes(searchTerm.toLowerCase())),
-      totalVolume: events.reduce((sum, e) => sum + e.volume, 0),
-      eventCount: events.length,
+      events: filteredMarkets,
+      totalVolume: filteredMarkets.reduce((sum, e) => sum + e.volume, 0),
+      eventCount: filteredMarkets.length,
       lastUpdated: new Date().toISOString()
     };
   } catch (error) {
