@@ -1,3 +1,48 @@
+import { useState, useEffect } from 'react'
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts'
+import axios from 'axios'
+
+function PriceChart({ seriesTicker, eventTicker }) {
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('/api/candlesticks', {
+          params: { seriesTicker, eventTicker }
+        })
+        // 假设 candlesticks 有 end_ts, yes_price, no_price
+        const chartData = response.data.map(candle => ({
+          time: new Date(candle.end_ts * 1000).toLocaleDateString(),
+          yes: parseFloat(candle.yes_price),
+          no: parseFloat(candle.no_price)
+        }))
+        setData(chartData)
+      } catch (error) {
+        console.error('Error fetching candlesticks:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [seriesTicker, eventTicker])
+
+  if (loading) return <div className="text-xs text-gray-400">加载中...</div>
+  if (data.length === 0) return <div className="text-xs text-gray-400">无数据</div>
+
+  return (
+    <ResponsiveContainer width="100%" height={60}>
+      <LineChart data={data}>
+        <XAxis dataKey="time" hide />
+        <YAxis hide />
+        <Line type="monotone" dataKey="yes" stroke="#10b981" strokeWidth={1} dot={false} />
+        <Line type="monotone" dataKey="no" stroke="#ef4444" strokeWidth={1} dot={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
+
 function MarketCard({ platform, data }) {
   if (!data || data.error) {
     return (
@@ -52,6 +97,11 @@ function MarketCard({ platform, data }) {
               <h3 className="text-white text-sm font-semibold mb-2 truncate">
                 {event.title}
               </h3>
+              {platform === 'kalshi' && event.seriesTicker && (
+                <div className="mb-2">
+                  <PriceChart seriesTicker={event.seriesTicker} eventTicker={event.id} />
+                </div>
+              )}
               <div className="flex justify-between items-center mb-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">

@@ -89,7 +89,8 @@ async function fetchKalshiData(searchTerm = '') {
             title: market.title,
             volume: parseFloat(market.volume || 0),
             yesPrice: parseFloat(market.yes_ask || 0),
-            noPrice: parseFloat(market.no_ask || 0)
+            noPrice: parseFloat(market.no_ask || 0),
+            seriesTicker: event.series_ticker
           });
         });
       }
@@ -115,6 +116,17 @@ async function fetchKalshiData(searchTerm = '') {
   } catch (error) {
     console.error('Kalshi API error:', error.message);
     return generateMockData('kalshi', searchTerm);
+  }
+}
+
+// 获取 Kalshi 蜡烛图数据
+async function fetchKalshiCandlesticks(seriesTicker, eventTicker) {
+  try {
+    const response = await axios.get(`https://api.elections.kalshi.com/trade-api/v2/series/${seriesTicker}/events/${eventTicker}/candlesticks`);
+    return response.data.candlesticks || [];
+  } catch (error) {
+    console.error('Kalshi candlesticks API error:', error.message);
+    return [];
   }
 }
 
@@ -183,6 +195,7 @@ async function fetchPredictData(searchTerm = '') {
 module.exports = {
   fetchPolymarketData,
   fetchKalshiData,
+  fetchKalshiCandlesticks,
   fetchOpinionLabsData,
   fetch42SpaceData,
   fetchProbableData,
