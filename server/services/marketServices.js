@@ -41,13 +41,38 @@ function generateMockData(platform, searchTerm) {
 // Polymarket数据获取
 async function fetchPolymarketData(searchTerm = '') {
   try {
-    // TODO: 实现真实的Polymarket API调用
-    // 目前使用模拟数据
-    // const response = await axios.get('https://api.polymarket.com/v1/markets', {
-    //   params: { query: searchTerm }
-    // });
-    
-    return generateMockData('polymarket', searchTerm);
+    const query = `
+      query {
+        markets(first: 10, order: "volume", desc: true) {
+          edges {
+            node {
+              id
+              question
+              volume
+              yesPrice
+              noPrice
+            }
+          }
+        }
+      }
+    `;
+    const response = await axios.post('https://gamma-api.polymarket.com/', { query });
+    const markets = response.data.data.markets.edges.map(edge => edge.node);
+    const events = markets.map(market => ({
+      id: market.id,
+      title: market.question,
+      volume: parseFloat(market.volume),
+      yesPrice: parseFloat(market.yesPrice),
+      noPrice: parseFloat(market.noPrice)
+    }));
+    return {
+      platform: 'polymarket',
+      url: PLATFORM_URLS.polymarket,
+      events: events.filter(event => !searchTerm || event.title.toLowerCase().includes(searchTerm.toLowerCase())),
+      totalVolume: events.reduce((sum, e) => sum + e.volume, 0),
+      eventCount: events.length,
+      lastUpdated: new Date().toISOString()
+    };
   } catch (error) {
     console.error('Polymarket API error:', error.message);
     return generateMockData('polymarket', searchTerm);
@@ -57,8 +82,23 @@ async function fetchPolymarketData(searchTerm = '') {
 // Kalshi数据获取
 async function fetchKalshiData(searchTerm = '') {
   try {
-    // TODO: 实现真实的Kalshi API调用
-    return generateMockData('kalshi', searchTerm);
+    const response = await axios.get('https://trading-api.kalshi.com/trade-api/v2/markets');
+    const markets = response.data.markets || [];
+    const events = markets.map(market => ({
+      id: market.id,
+      title: market.title,
+      volume: parseFloat(market.volume),
+      yesPrice: parseFloat(market.yes_price),
+      noPrice: parseFloat(market.no_price)
+    }));
+    return {
+      platform: 'kalshi',
+      url: PLATFORM_URLS.kalshi,
+      events: events.filter(event => !searchTerm || event.title.toLowerCase().includes(searchTerm.toLowerCase())),
+      totalVolume: events.reduce((sum, e) => sum + e.volume, 0),
+      eventCount: events.length,
+      lastUpdated: new Date().toISOString()
+    };
   } catch (error) {
     console.error('Kalshi API error:', error.message);
     return generateMockData('kalshi', searchTerm);
@@ -68,8 +108,23 @@ async function fetchKalshiData(searchTerm = '') {
 // Opinion Labs数据获取
 async function fetchOpinionLabsData(searchTerm = '') {
   try {
-    // TODO: 实现真实的Opinion Labs API调用
-    return generateMockData('opinionLabs', searchTerm);
+    const response = await axios.get('https://proxy.opinion.trade:8443/openapi/markets');
+    const markets = response.data.markets || [];
+    const events = markets.map(market => ({
+      id: market.id,
+      title: market.question,
+      volume: parseFloat(market.volume),
+      yesPrice: parseFloat(market.yes_price),
+      noPrice: parseFloat(market.no_price)
+    }));
+    return {
+      platform: 'opinionLabs',
+      url: PLATFORM_URLS.opinionLabs,
+      events: events.filter(event => !searchTerm || event.title.toLowerCase().includes(searchTerm.toLowerCase())),
+      totalVolume: events.reduce((sum, e) => sum + e.volume, 0),
+      eventCount: events.length,
+      lastUpdated: new Date().toISOString()
+    };
   } catch (error) {
     console.error('Opinion Labs API error:', error.message);
     return generateMockData('opinionLabs', searchTerm);
