@@ -117,14 +117,17 @@ async function fetchKalshiData(searchTerm = '') {
 // Opinion Labs数据获取
 async function fetchOpinionLabsData(searchTerm = '') {
   try {
-    const response = await axios.get('https://proxy.opinion.trade:8443/openapi/markets');
-    const markets = response.data.markets || [];
+    // 使用官方 Opinion OpenAPI
+    const apiKey = process.env.OPINION_LABS_API_KEY; // 从环境变量获取 API Key
+    const headers = apiKey ? { apikey: apiKey } : {};
+    const response = await axios.get('https://proxy.opinion.trade:8443/openapi/market?status=activated&sortBy=5&limit=20', { headers });
+    const markets = response.data || [];
     const events = markets.map(market => ({
-      id: market.id,
-      title: market.question,
-      volume: parseFloat(market.volume),
-      yesPrice: parseFloat(market.yes_price),
-      noPrice: parseFloat(market.no_price)
+      id: market.marketId,
+      title: market.marketTitle,
+      volume: parseFloat(market.volume || 0),
+      yesPrice: parseFloat(market.yesPrice || 0),
+      noPrice: parseFloat(market.noPrice || 0)
     }));
     return {
       platform: 'opinionLabs',

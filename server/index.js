@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
 const { fetchPolymarketData, fetchKalshiData, fetchOpinionLabsData, 
         fetch42SpaceData, fetchProbableData, fetchPredictData } = require('./services/marketServices');
 
