@@ -41,36 +41,29 @@ function generateMockData(platform, searchTerm) {
 // Polymarket数据获取
 async function fetchPolymarketData(searchTerm = '') {
   try {
-    const query = `
-      query {
-        markets(first: 10, order: "volume", desc: true) {
-          edges {
-            node {
-              id
-              question
-              volume
-              yesPrice
-              noPrice
-            }
-          }
-        }
-      }
-    `;
-    const response = await axios.post('https://gamma-api.polymarket.com/', { query });
-    const markets = response.data.data.markets.edges.map(edge => edge.node);
+    // 使用官方 Gamma Markets API (REST API)
+    const response = await axios.get('https://gamma-api.polymarket.com/markets?closed=false&limit=100&offset=0&order=volume&ascending=false');
+    const markets = response.data || [];
+    
     const events = markets.map(market => ({
       id: market.id,
       title: market.question,
-      volume: parseFloat(market.volume),
-      yesPrice: parseFloat(market.yesPrice),
-      noPrice: parseFloat(market.noPrice)
+      volume: parseFloat(market.volume || 0),
+      yesPrice: parseFloat(market.outcomes?.[0]?.price || 0),
+      noPrice: parseFloat(market.outcomes?.[1]?.price || 0)
     }));
+    
+    // 过滤搜索词
+    const filteredEvents = searchTerm ? 
+      events.filter(event => event.title.toLowerCase().includes(searchTerm.toLowerCase())) : 
+      events;
+    
     return {
       platform: 'polymarket',
       url: PLATFORM_URLS.polymarket,
-      events: events.filter(event => !searchTerm || event.title.toLowerCase().includes(searchTerm.toLowerCase())),
-      totalVolume: events.reduce((sum, e) => sum + e.volume, 0),
-      eventCount: events.length,
+      events: filteredEvents,
+      totalVolume: filteredEvents.reduce((sum, e) => sum + e.volume, 0),
+      eventCount: filteredEvents.length,
       lastUpdated: new Date().toISOString()
     };
   } catch (error) {
