@@ -1,28 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 
 function SearchBar({ onSearch, loading }) {
   const [inputValue, setInputValue] = useState('')
-
-  // 防抖函数
-  const debounce = useCallback((func, delay) => {
-    let timeoutId
-    return (...args) => {
-      clearTimeout(timeoutId)
-      timeoutId = setTimeout(() => func.apply(null, args), delay)
-    }
-  }, [])
-
-  // 防抖搜索
-  const debouncedSearch = useCallback(
-    debounce((value) => {
-      onSearch(value)
-    }, 500), // 500ms 防抖
-    [onSearch, debounce]
-  )
-
-  useEffect(() => {
-    debouncedSearch(inputValue)
-  }, [inputValue, debouncedSearch])
 
   const handleSubmit = (e) => {
     e.preventDefault()
