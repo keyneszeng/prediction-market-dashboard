@@ -54,6 +54,7 @@ async function fetchPolymarketData(searchTerm = '') {
             id: market.id,
             title: market.question,
             volume: parseFloat(market.volume || 0),
+            volume24hr: parseFloat(market.volume24hr || 0),
             yesPrice: parseFloat(market.outcomes?.[0]?.price || 0),
             noPrice: parseFloat(market.outcomes?.[1]?.price || 0),
             tags: event.tags ? event.tags.map(t => t.label) : []
@@ -62,8 +63,8 @@ async function fetchPolymarketData(searchTerm = '') {
       }
     });
     
-    // 按交易量排序，取前50
-    allMarkets.sort((a, b) => b.volume - a.volume);
+    // 按24小时交易量排序，取前50
+    allMarkets.sort((a, b) => (b.volume24hr || 0) - (a.volume24hr || 0));
     const topMarkets = allMarkets.slice(0, 50);
     
     // 过滤搜索词
@@ -101,6 +102,7 @@ async function fetchKalshiData(searchTerm = '') {
             id: market.ticker,
             title: market.title,
             volume: parseFloat(market.volume || 0),
+            volume24hr: parseFloat(market.volume24hr || 0),
             yesPrice: parseFloat(market.yes_ask || 0),
             noPrice: parseFloat(market.no_ask || 0),
             seriesTicker: event.series_ticker
@@ -109,8 +111,8 @@ async function fetchKalshiData(searchTerm = '') {
       }
     });
     
-    // 按交易量排序，取前50
-    allMarkets.sort((a, b) => b.volume - a.volume);
+    // 按24小时交易量排序，取前50
+    allMarkets.sort((a, b) => (b.volume24hr || 0) - (a.volume24hr || 0));
     const topMarkets = allMarkets.slice(0, 50);
     
     // 过滤搜索词
@@ -155,6 +157,7 @@ async function fetchOpinionLabsData(searchTerm = '') {
       id: market.marketId,
       title: market.marketTitle,
       volume: parseFloat(market.volume || 0),
+      volume24hr: parseFloat(market.volume24hr || 0),
       yesPrice: parseFloat(market.yesPrice || 0),
       noPrice: parseFloat(market.noPrice || 0)
     }));
