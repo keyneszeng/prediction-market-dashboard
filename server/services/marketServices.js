@@ -41,23 +41,35 @@ function generateMockData(platform, searchTerm) {
 // Polymarket数据获取
 async function fetchPolymarketData(searchTerm = '') {
   try {
-    // 使用官方 Gamma Markets API (REST API)
-    const response = await axios.get('https://gamma-api.polymarket.com/markets?closed=false&limit=50&offset=0&order=volume&ascending=false');
-    const markets = response.data || [];
+    // 使用官方 Gamma Markets API (REST API) - events 端点
+    const response = await axios.get('https://gamma-api.polymarket.com/events?closed=false&limit=50&offset=0&order=id&ascending=false');
+    const eventsData = response.data || [];
     
-    const events = markets.map(market => ({
-      id: market.id,
-      title: market.question,
-      volume: parseFloat(market.volume || 0),
-      yesPrice: parseFloat(market.outcomes?.[0]?.price || 0),
-      noPrice: parseFloat(market.outcomes?.[1]?.price || 0),
-      tags: market.event?.tags || []
-    }));
+    // 将事件下的市场扁平化为事件列表
+    const allMarkets = [];
+    eventsData.forEach(event => {
+      if (event.markets && Array.isArray(event.markets)) {
+        event.markets.forEach(market => {
+          allMarkets.push({
+            id: market.id,
+            title: market.question,
+            volume: parseFloat(market.volume || 0),
+            yesPrice: parseFloat(market.outcomes?.[0]?.price || 0),
+            noPrice: parseFloat(market.outcomes?.[1]?.price || 0),
+            tags: event.tags || []
+          });
+        });
+      }
+    });
+    
+    // 按交易量排序，取前50
+    allMarkets.sort((a, b) => b.volume - a.volume);
+    const topMarkets = allMarkets.slice(0, 50);
     
     // 过滤搜索词
     const filteredEvents = searchTerm ? 
-      events.filter(event => event.title.toLowerCase().includes(searchTerm.toLowerCase())) : 
-      events;
+      topMarkets.filter(event => event.title.toLowerCase().includes(searchTerm.toLowerCase())) : 
+      topMarkets;
     
     return {
       platform: 'polymarket',
