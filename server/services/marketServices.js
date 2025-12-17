@@ -42,7 +42,7 @@ function generateMockData(platform, searchTerm) {
 async function fetchPolymarketData(searchTerm = '') {
   try {
     // 使用官方 Gamma Markets API (REST API)
-    const response = await axios.get('https://gamma-api.polymarket.com/markets?closed=false&limit=100&offset=0&order=volume&ascending=false');
+    const response = await axios.get('https://gamma-api.polymarket.com/markets?closed=false&limit=50&offset=0&order=volume&ascending=false');
     const markets = response.data || [];
     
     const events = markets.map(market => ({
@@ -76,7 +76,7 @@ async function fetchPolymarketData(searchTerm = '') {
 async function fetchKalshiData(searchTerm = '') {
   try {
     // 使用官方 Trade API v2 (REST API)
-    const response = await axios.get('https://api.elections.kalshi.com/trade-api/v2/events?status=open&with_nested_markets=true&limit=100');
+    const response = await axios.get('https://api.elections.kalshi.com/trade-api/v2/events?status=open&with_nested_markets=true&limit=50');
     const eventsData = response.data.events || [];
     
     // 将事件下的市场扁平化为事件列表
@@ -95,10 +95,14 @@ async function fetchKalshiData(searchTerm = '') {
       }
     });
     
+    // 按交易量排序，取前50
+    allMarkets.sort((a, b) => b.volume - a.volume);
+    const topMarkets = allMarkets.slice(0, 50);
+    
     // 过滤搜索词
     const filteredMarkets = searchTerm ? 
-      allMarkets.filter(market => market.title.toLowerCase().includes(searchTerm.toLowerCase())) : 
-      allMarkets;
+      topMarkets.filter(market => market.title.toLowerCase().includes(searchTerm.toLowerCase())) : 
+      topMarkets;
     
     return {
       platform: 'kalshi',
@@ -120,7 +124,7 @@ async function fetchOpinionLabsData(searchTerm = '') {
     // 使用官方 Opinion OpenAPI
     const apiKey = process.env.OPINION_LABS_API_KEY; // 从环境变量获取 API Key
     const headers = apiKey ? { apikey: apiKey } : {};
-    const response = await axios.get('https://proxy.opinion.trade:8443/openapi/market?status=activated&sortBy=5&limit=20', { headers });
+    const response = await axios.get('https://proxy.opinion.trade:8443/openapi/market?status=activated&sortBy=5&limit=50', { headers });
     const markets = response.data || [];
     const events = markets.map(market => ({
       id: market.marketId,
